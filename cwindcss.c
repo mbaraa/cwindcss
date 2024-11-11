@@ -104,6 +104,10 @@ char **cwind_extract_css_classes(char *html, size_t *out_classes_count) {
   while (matches[sz].match != NULL) {
     sz++;
   }
+  if (sz == 0) {
+    *out_classes_count = 0;
+    return NULL;
+  }
 
   char *all_classes = (char *)malloc(sizeof(char) * sz);
   if (sz > 0) {
@@ -120,22 +124,34 @@ char **cwind_extract_css_classes(char *html, size_t *out_classes_count) {
 
   size_t tokens_count = 0;
   char **tokens = split_string(all_classes, " ", &tokens_count);
-  *out_classes_count = tokens_count;
+  if (tokens_count == 0) {
+    *out_classes_count = 0;
+    return NULL;
+  }
   struct str_bool_hash_item *unique_classes = NULL;
   for (size_t i = 0; i < tokens_count; i++) {
-    struct str_bool_hash_item *item =
-        (struct str_bool_hash_item *)malloc(sizeof(struct str_bool_hash_item));
-    item->key = tokens[i];
-    item->value = true;
-    HASH_ADD_STR(unique_classes, key, item);
+    struct str_bool_hash_item *item = NULL;
+
+    HASH_FIND_STR(unique_classes, tokens[i], item);
+    if (item == NULL) {
+      item = (struct str_bool_hash_item *)malloc(
+          sizeof(struct str_bool_hash_item));
+      item->key = tokens[i];
+      item->value = true;
+      HASH_ADD_STR(unique_classes, key, item);
+    }
   }
 
-  char **classes = (char **)malloc(sizeof(char *) * tokens_count);
-  struct str_bool_hash_item *mp;
+  size_t num_classes = unique_classes == NULL ? 0 : HASH_COUNT(unique_classes);
+  *out_classes_count = num_classes;
+  char **classes = (char **)malloc(sizeof(char *) * num_classes);
+
+  struct str_bool_hash_item *item = NULL, *tmp = NULL;
   int i = 0;
-  for (mp = unique_classes; mp != NULL;
-       mp = (struct str_bool_hash_item *)mp->hh.next, i++) {
-    classes[i] = mp->key;
+  HASH_ITER(hh, unique_classes, item, tmp) {
+    classes[i++] = strdup(item->key);
+    HASH_DEL(unique_classes, item);
+    free(item);
   }
 
   regfree(classes_pattern);

@@ -9,9 +9,6 @@ import (
 	"unsafe"
 )
 
-// char **cwind_extract_css_classes(char *html, size_t *out_classes_count);
-// char *cwind_process_utility_classes(char *input_html);
-
 func ExtractCssClasses(html string) []string {
 	C.cwind_init()
 	defer C.cwind_destroy()
