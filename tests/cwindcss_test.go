@@ -32,12 +32,13 @@ func Test_ExtractCssClasses_ReturnsEmptyArray_WhenNoClassesAreProvided(t *testin
 
 func Test_ProcessUtilityClasses_Returns_UniqueCssClassesOfTheGivenUtilityClasses(t *testing.T) {
 	htmlStr := `
-<div class="container">
+<div class="static">
   <p class="text-center intro p-1 p-[20px] pt-[69px] m-[12px] mt-[200px] pb-[420px]">Welcome!</p>
   <button class="btn btn-primary">Click me</button>
 </div>`
 	css := cwindcss.ProcessUtilityClasses(htmlStr)
-	if css != `.p-\[20px\] {padding: 20px;} .pt-\[69px\] {padding-top: 69px;} .m-\[12px\] {margin: 12px;} .mt-\[200px\] {margin-top: 200px;} .pb-\[420px\] {padding-bottom: 420px;}` {
+	if css != `.static {position: static;} .p-\[20px\] {padding: 20px;} .pt-\[69px\] {padding-top: 69px;}`+
+		` .m-\[12px\] {margin: 12px;} .mt-\[200px\] {margin-top: 200px;} .pb-\[420px\] {padding-bottom: 420px;}` {
 		t.Fatal("output css is invalid", css)
 	}
 }
