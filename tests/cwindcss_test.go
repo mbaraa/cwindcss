@@ -37,7 +37,7 @@ func Test_ProcessUtilityClasses_Returns_UniqueCssClassesOfTheGivenUtilityClasses
   <button class="btn btn-primary">Click me</button>
 </div>`
 	css := cwindcss.ProcessUtilityClasses(htmlStr)
-	if css != `.p20px {padding: 20px;} .pt69px {padding-top: 69px;} .m12px {margin: 12px;} .mt200px {margin-top: 200px;} .pb420px {padding-bottom: 420px;}` {
-		t.Fatal("output css is invalid")
+	if css != `.p-\[20px\] {padding: 20px;} .pt-\[69px\] {padding-top: 69px;} .m-\[12px\] {margin: 12px;} .mt-\[200px\] {margin-top: 200px;} .pb-\[420px\] {padding-bottom: 420px;}` {
+		t.Fatal("output css is invalid", css)
 	}
 }

@@ -1,4 +1,6 @@
 #include "./cwindcss.h"
+#include <stddef.h>
+#include <stdlib.h>
 
 typedef struct {
   char *match;
@@ -72,17 +74,17 @@ void cwind_init() {
       compile_regex(numerical_utility_class_value_pattern_buffer);
 
   // init util classes
-  add_util_class("p", ".p%s {padding: %s;}");
-  add_util_class("pt", ".pt%s {padding-top: %s;}");
-  add_util_class("pb", ".pb%s {padding-bottom: %s;}");
-  add_util_class("pl", ".pl%s {padding-left: %s;}");
-  add_util_class("pr", ".pr%s {padding-right: %s;}");
+  add_util_class("p", ".%s {padding: %s;}");
+  add_util_class("pt", ".%s {padding-top: %s;}");
+  add_util_class("pb", ".%s {padding-bottom: %s;}");
+  add_util_class("pl", ".%s {padding-left: %s;}");
+  add_util_class("pr", ".%s {padding-right: %s;}");
 
-  add_util_class("m", ".m%s {margin: %s;}");
-  add_util_class("mt", ".mt%s {margin-top: %s;}");
-  add_util_class("mb", ".mb%s {margin-bottom: %s;}");
-  add_util_class("ml", ".ml%s {margin-left: %s;}");
-  add_util_class("mr", ".mr%s {margin-right: %s;}");
+  add_util_class("m", ".%s {margin: %s;}");
+  add_util_class("mt", ".%s {margin-top: %s;}");
+  add_util_class("mb", ".%s {margin-bottom: %s;}");
+  add_util_class("ml", ".%s {margin-left: %s;}");
+  add_util_class("mr", ".%s {margin-right: %s;}");
 }
 
 void cwind_destroy() {
@@ -190,7 +192,19 @@ char *cwind_process_utility_classes(char *input_html) {
 
       char *css_class_definition =
           (char *)malloc(len + (2 * strlen(value[0].group2)));
-      sprintf(css_class_definition, css_class_format, value[0].group2,
+      size_t css_class_name_len = strlen(value[0].match);
+      char *css_class_name = (char *)malloc(css_class_name_len + 2);
+      for (size_t i = 0, j = 0; i < css_class_name_len; i++, j++) {
+        char chr = value[0].match[i];
+        if (!((chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z') ||
+              (chr >= '0' && chr <= '9') || chr == '-' || chr == '_')) {
+          css_class_name[j] = '\\';
+          css_class_name[++j] = chr;
+          continue;
+        }
+        css_class_name[j] = chr;
+      }
+      sprintf(css_class_definition, css_class_format, css_class_name,
               value[0].group2);
       output = concat(output, css_class_definition);
       output = concat(output, " ");
