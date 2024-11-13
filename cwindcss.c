@@ -1,7 +1,4 @@
 #include "./cwindcss.h"
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
 
 typedef struct {
   char *match;
@@ -58,8 +55,7 @@ struct class_fmt_hash_item *classes_values = NULL;
 
 void cwind_init() {
   // init regex patterns
-  utility_class_pattern =
-      compile_regex("^([-!]|!-|-\\!)?(.*:)?.*-?(\\[.*\\]|\\w+)$");
+  utility_class_pattern = compile_regex("^-?!?(.*:)?.*-?(\\[.*\\]|\\w+)$");
 
   const char *responsive_modifiers = "xs:|sm:|md:|lg:|xl:|2xl:";
   size_t responsive_modifiers_len = strlen(responsive_modifiers);
@@ -75,7 +71,7 @@ void cwind_init() {
   char numerical_utility_class_value_pattern_buffer[16 + sizing_classes_len];
   snprintf(numerical_utility_class_value_pattern_buffer,
            sizeof(numerical_utility_class_value_pattern_buffer),
-           "(%s)-\\[(.*)\\]", sizing_classes);
+           "(-?!?%s)-\\[(.*)\\]", sizing_classes);
   numerical_utility_class_value_pattern =
       compile_regex(numerical_utility_class_value_pattern_buffer);
 
@@ -84,46 +80,110 @@ void cwind_init() {
   // init util classes
   // spacing
   add_util_class("p", ".%s {padding: %s;}", SPACING);
+  add_util_class("!p", ".%s {padding: %s !important;}", SPACING);
+  add_util_class("-p", ".%s {padding: -%s;}", SPACING);
   add_util_class("pt", ".%s {padding-top: %s;}", SPACING);
+  add_util_class("!pt", ".%s {padding-top: %s !important;}", SPACING);
+  add_util_class("-pt", ".%s {padding-top: -%s;}", SPACING);
   add_util_class("pb", ".%s {padding-bottom: %s;}", SPACING);
+  add_util_class("!pb", ".%s {padding-bottom: %s !important;}", SPACING);
+  add_util_class("-pb", ".%s {padding-bottom: -%s;}", SPACING);
   add_util_class("pl", ".%s {padding-left: %s;}", SPACING);
+  add_util_class("!pl", ".%s {padding-left: %s !important;}", SPACING);
+  add_util_class("-pl", ".%s {padding-left: -%s;}", SPACING);
   add_util_class("pr", ".%s {padding-right: %s;}", SPACING);
+  add_util_class("!pr", ".%s {padding-right: %s !important;}", SPACING);
+  add_util_class("-pr", ".%s {padding-right: -%s;}", SPACING);
 
   add_util_class("m", ".%s {margin: %s;}", SPACING);
+  add_util_class("!m", ".%s {margin: %s !important;}", SPACING);
+  add_util_class("-m", ".%s {margin: -%s;}", SPACING);
   add_util_class("mt", ".%s {margin-top: %s;}", SPACING);
+  add_util_class("!mt", ".%s {margin-top: %s !important;}", SPACING);
+  add_util_class("-mt", ".%s {margin-top: -%s;}", SPACING);
   add_util_class("mb", ".%s {margin-bottom: %s;}", SPACING);
+  add_util_class("!mb", ".%s {margin-bottom: %s !important;}", SPACING);
+  add_util_class("-mb", ".%s {margin-bottom: -%s;}", SPACING);
   add_util_class("ml", ".%s {margin-left: %s;}", SPACING);
+  add_util_class("!ml", ".%s {margin-left: %s !important;}", SPACING);
+  add_util_class("-ml", ".%s {margin-left: -%s;}", SPACING);
   add_util_class("mr", ".%s {margin-right: %s;}", SPACING);
+  add_util_class("!mr", ".%s {margin-right: %s !important;}", SPACING);
+  add_util_class("-mr", ".%s {margin-right: -%s;}", SPACING);
 
   add_util_class("space-x", ".%s {margin-left: %s;}", SPACING);
+  add_util_class("!space-x", ".%s {margin-left: %s !important;}", SPACING);
+  add_util_class("-space-x", ".%s {margin-left: -%s;}", SPACING);
   add_util_class("space-y", ".%s {margin-top: %s;}", SPACING);
+  add_util_class("!space-y", ".%s {margin-top: %s !important;}", SPACING);
+  add_util_class("-space-y", ".%s {margin-top: -%s;}", SPACING);
 
   // sizing
   add_util_class("w", ".%s {width: %s;}", SIZING);
+  add_util_class("!w", ".%s {width: %s !important;}", SIZING);
+  add_util_class("-w", ".%s {width: -%s;}", SIZING);
   add_util_class("h", ".%s {height: %s;}", SIZING);
+  add_util_class("!h", ".%s {height: %s !important;}", SIZING);
+  add_util_class("-h", ".%s {height: -%s;}", SIZING);
   add_util_class("max-w", ".%s {max-width: %s;}", SIZING);
+  add_util_class("!max-w", ".%s {max-width: %s !important;}", SIZING);
+  add_util_class("-max-w", ".%s {max-width: -%s;}", SIZING);
   add_util_class("max-h", ".%s {max-height: %s;}", SIZING);
+  add_util_class("!max-h", ".%s {max-height: %s !important;}", SIZING);
+  add_util_class("-max-h", ".%s {max-height: -%s;}", SIZING);
   add_util_class("min-w", ".%s {min-width: %s;}", SIZING);
+  add_util_class("!min-w", ".%s {min-width: %s !important;}", SIZING);
+  add_util_class("-min-w", ".%s {min-width: -%s;}", SIZING);
   add_util_class("min-h", ".%s {min-height: %s;}", SIZING);
+  add_util_class("!min-h", ".%s {min-height: %s !important;}", SIZING);
+  add_util_class("-min-h", ".%s {min-height: -%s;}", SIZING);
 
   // positioning placing
   add_util_class("static", ".%s {position: static;}", POSITIONING_PLACING);
+  add_util_class("!static", ".%s {position: static !important;}",
+                 POSITIONING_PLACING);
   add_util_class("fixed", ".%s {position: fixed;}", POSITIONING_PLACING);
+  add_util_class("!fixed", ".%s {position: fixed !important;}",
+                 POSITIONING_PLACING);
   add_util_class("absolute", ".%s {position: absolute;}", POSITIONING_PLACING);
+  add_util_class("!absolute", ".%s {position: absolute !important;}",
+                 POSITIONING_PLACING);
   add_util_class("relative", ".%s {position: relative;}", POSITIONING_PLACING);
+  add_util_class("!relative", ".%s {position: relative !important;}",
+                 POSITIONING_PLACING);
   add_util_class("sticky", ".%s {position: sticky;}", POSITIONING_PLACING);
+  add_util_class("!sticky", ".%s {position: sticky !important;}",
+                 POSITIONING_PLACING);
 
   // positioning
   add_util_class("top", ".%s {top: %s;}", POSITIONING);
+  add_util_class("!top", ".%s {top: %s !important;}", POSITIONING);
+  add_util_class("-top", ".%s {top: -%s;}", POSITIONING);
   add_util_class("right", ".%s {right: %s;}", POSITIONING);
+  add_util_class("!right", ".%s {right: %s !important;}", POSITIONING);
+  add_util_class("-right", ".%s {right: -%s;}", POSITIONING);
   add_util_class("bottom", ".%s {bottom: %s;}", POSITIONING);
+  add_util_class("!bottom", ".%s {bottom: %s !important;}", POSITIONING);
+  add_util_class("-bottom", ".%s {bottom: -%s;}", POSITIONING);
   add_util_class("left", ".%s {left: %s;}", POSITIONING);
+  add_util_class("!left", ".%s {left: %s !important;}", POSITIONING);
+  add_util_class("-left", ".%s {left: -%s;}", POSITIONING);
   add_util_class("z", ".%s {z-index: %s;}", POSITIONING);
+  add_util_class("!z", ".%s {z-index: %s !important;}", POSITIONING);
+  add_util_class("-z", ".%s {z-index: -%s;}", POSITIONING);
   add_util_class("inset", ".%s {inset: %s;}", POSITIONING);
+  add_util_class("!inset", ".%s {inset: %s !important;}", POSITIONING);
+  add_util_class("-inset", ".%s {inset: -%s;}", POSITIONING);
 
   // inset
   add_util_class("inset-x", ".%s {left: %s; right: %s;}", INSET);
+  add_util_class("!inset-x", ".%s {left: %s !important; right: %s !important;}",
+                 INSET);
+  add_util_class("-inset-x", ".%s {left: -%s; right: -%s;}", INSET);
   add_util_class("inset-y", ".%s {top: %s; bottom: %s;}", INSET);
+  add_util_class("!inset-y", ".%s {top: %s !important; bottom: %s !important;}",
+                 INSET);
+  add_util_class("-inset-y", ".%s {top: -%s; bottom: -%s;}", INSET);
 }
 
 void cwind_destroy() {
