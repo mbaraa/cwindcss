@@ -43,11 +43,11 @@ sudo make install
 - [x] Sizing: w-, h-, min-w-, min-h-, max-w-, max-h- (width, height, min/max width/height)
 - [x] Spacing: p-, m-, space-x-, space-y- (padding, margin, horizontal/vertical spacing)
 - [x] Positioning: static, fixed, absolute, relative, sticky, top-, right-, bottom-, left-, inset-, z- (positioning and z-index)
-- [ ] Display: block, inline-block, inline, flex, grid, table, hidden (display modes)
-- [ ] Flexbox: flex-row, flex-col, flex-wrap, flex-nowrap, flex-grow, flex-shrink, order-, justify-, items-, content-, self- (flexbox properties)
-- [ ] Grid: grid-cols-, grid-rows-, gap-, row-span-, col-span- (grid layout properties)
-- [ ] Tables: table-auto, table-fixed (table layout)
-- [ ] Box Alignment: float-, clear- (float and clear)
+- [x] Display: block, inline-block, inline, flex, grid, table, hidden (display modes)
+- [x] Flexbox: flex-row, flex-col, flex-wrap, flex-nowrap, flex-grow, flex-shrink, order-, justify-, items-, content-, self- (flexbox properties)
+- [x] Grid: grid-cols-, grid-rows-, gap-, row-span-, col-span- (grid layout properties)
+- [x] Tables: table-auto, table-fixed (table layout)
+- [x] Box Alignment: float-, clear- (float and clear)
 
 ## Typography
 
