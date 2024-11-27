@@ -28,6 +28,14 @@ sudo make install
 
 # Usage:
 
+## CLI
+
+```bash
+cwindcss ./views
+```
+
+## Library (not usable yet, stick to the CLI)
+
 1. Include the header
 
 ```c
