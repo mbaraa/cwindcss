@@ -21,7 +21,7 @@ _Note: this is a fling side-project that could die anytime so don't get your hop
 
 ```bash
 git clone https://github.com/mbaraa/cwindcss
-cd ctemplate
+cd cwindcss
 make
 sudo make install
 ```

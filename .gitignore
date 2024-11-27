@@ -1,2 +1,5 @@
 *.o
 *.so
+*.css
+*.html
+cli/cwindcss

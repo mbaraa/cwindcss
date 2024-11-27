@@ -1,3 +1,13 @@
+#include <dirent.h>
+#include <regex.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <uthash.h>
+
 #include "./cwindcss.h"
 
 typedef struct {
@@ -34,6 +44,7 @@ void add_util_class(char *uc, char *fmt, enum class_value_type type);
 // start of string utils funcs
 char *concat(const char *s1, const char *s2);
 char **split_string(char *str, const char *delim, size_t *out_tokens_count);
+bool has_suffix(const char *str, const char *suffix);
 // end of string utils funcs
 
 // start of regexp utils funcs
@@ -113,10 +124,8 @@ char **cwind_extract_css_classes(char *html, size_t *out_classes_count) {
 
 // replace char* with buffer
 char *cwind_process_utility_classes(char *input_html) {
-  printf("%s\n", input_html);
   int stat;
   char msgbuf[100];
-
   size_t classes_count = 0;
   char **classes = cwind_extract_css_classes(input_html, &classes_count);
   char *output = "";
@@ -204,6 +213,93 @@ char *cwind_process_utility_classes(char *input_html) {
   return output;
 }
 
+int cwind_read_files_rec(const char *path, const char *extension_filter,
+                         char **out_buffer) {
+  DIR *d;
+  struct dirent *dir;
+  struct stat path_stat;
+  char full_path[256];
+  FILE *current_file = NULL;
+
+  d = opendir(path);
+
+  if (d) {
+    while ((dir = readdir(d)) != NULL) {
+      if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0) {
+        continue;
+      }
+
+      snprintf(full_path, sizeof(full_path), "%s/%s", path, dir->d_name);
+
+      if (stat(full_path, &path_stat) == 0) {
+        if (S_ISREG(path_stat.st_mode) &&
+            has_suffix(full_path, extension_filter)) {
+          printf("processing: %s ", full_path);
+          current_file = fopen(full_path, "r+");
+          if (current_file == NULL) {
+            puts("❌");
+            continue;
+          }
+          char *smol_buffer = (char *)malloc(path_stat.st_size);
+          fread(smol_buffer, path_stat.st_size, 1, current_file);
+          size_t buf_len = strlen(*out_buffer);
+          if (buf_len < path_stat.st_size) {
+            *out_buffer = (char *)malloc(buf_len + path_stat.st_size);
+          }
+          strcat(*out_buffer, smol_buffer);
+          puts("✅");
+          /* fclose(current_file); */
+        } else if (S_ISDIR(path_stat.st_mode)) {
+          cwind_read_files_rec(full_path, extension_filter, out_buffer);
+        }
+      } else {
+        perror("Error getting file status");
+        return CWIND_ERROR;
+      }
+    }
+    closedir(d);
+  } else {
+    perror("Error opening directory");
+    return CWIND_ERROR;
+  }
+
+  return CWIND_OK;
+}
+
+int cwind_generate_output_css_file(const char *path,
+                                   const char *extension_filter,
+                                   const char *out_path) {
+  char *buffer = (char *)malloc(1);
+  int stat = cwind_read_files_rec(path, extension_filter, &buffer);
+  if (stat != CWIND_OK) {
+    return stat;
+  }
+  size_t buffer_len = strlen(buffer);
+  buffer[buffer_len - 1] = '\0';
+
+  char *output_css = cwind_process_utility_classes(buffer);
+  if (output_css == NULL) {
+    return CWIND_ERROR;
+  }
+
+  FILE *f = fopen(out_path, "w+");
+  if (f == NULL) {
+    perror("can't create output file");
+    return CWIND_ERROR;
+  }
+
+  size_t output_css_len = strlen(output_css);
+  if (!fwrite(output_css, output_css_len, 1, f)) {
+    return CWIND_ERROR;
+  }
+
+  free(output_css);
+  /* free(buffer); */
+  fclose(f);
+
+  return CWIND_OK;
+}
+
 ////////////////////////////////////////////////////////////////
 ////////////////////  Global HashMap Utils  ////////////////////
 ////////////////////////////////////////////////////////////////
@@ -262,6 +358,17 @@ char **split_string(char *str, const char *delim, size_t *out_tokens_count) {
   *out_tokens_count = i;
 
   return tokens;
+}
+
+bool has_suffix(const char *str, const char *suffix) {
+  size_t str_len = strlen(str);
+  size_t suffix_len = strlen(suffix);
+
+  if (suffix_len > str_len) {
+    return false;
+  }
+
+  return strcmp(str + str_len - suffix_len, suffix) == 0;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -347,8 +454,20 @@ MatchData *find_all_string_submatch(regex_t *re, const char *input) {
 ///////////////////  Init and Destroy funcs  ///////////////////
 ////////////////////////////////////////////////////////////////
 
+void init_regex();
+void init_utility_classes();
+
 void cwind_init() {
-  // init regex patterns
+  init_utility_classes();
+  init_regex();
+}
+
+void cwind_destroy() {
+  regfree(utility_class_pattern);
+  regfree(numerical_utility_class_value_pattern);
+}
+
+void init_regex() {
   utility_class_pattern = compile_regex(
       "^-?!?([a-zA-Z0-9]+:)?[_a-zA-Z]+[_a-zA-Z0-9-]*(-(\\[.*\\]|\\w+))?$");
 
@@ -370,9 +489,11 @@ void cwind_init() {
   numerical_utility_class_value_pattern =
       compile_regex(numerical_utility_class_value_pattern_buffer);
 
-  only_words_utility_class_value_pattern = compile_regex("^([\\-\\!a-z0-9]+)$");
+  only_words_utility_class_value_pattern =
+      compile_regex("^([\\-\\!a-z0-9-]+)$");
+}
 
-  // init util classes
+void init_utility_classes() {
   // spacing
   add_util_class("p", ".%s {padding: %s;}", SINGLE_REPLACEMENT);
   add_util_class("!p", ".%s {padding: %s !important;}", SINGLE_REPLACEMENT);
@@ -1218,11 +1339,6 @@ void cwind_init() {
   add_util_class("float-none", ".%s {float: none;}", SINGLE_REPLACEMENT);
   add_util_class("!float-none", ".%s {float: none !important;}",
                  SINGLE_REPLACEMENT);
-}
-
-void cwind_destroy() {
-  regfree(utility_class_pattern);
-  regfree(numerical_utility_class_value_pattern);
 }
 
 ////////////////////////////////////////////////////////////////

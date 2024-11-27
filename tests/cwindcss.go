@@ -1,7 +1,7 @@
 package cwindcss
 
 // #cgo LDFLAGS: -L/usr/lib64 -ldl -lm
-// #include "./cwindcss.h"
+// #include "./cwindcss_test.h"
 import "C"
 
 import (
