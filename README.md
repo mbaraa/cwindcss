@@ -1,13 +1,8 @@
 <div align="center">
-  <a href="https://dankmuzikk.com" target="_blank"><img src="https://github.com/mbaraa/cwindcss/blob/main/docs/logo.png" width="150" /></a>
+  <a href="https://dankmuzikk.com" target="_blank"><img src="https://codeberg.org/lordbaraa/cwindcss/src/branch/master/docs/logo.png" width="150" /></a>
   <h1>Cwind CSS</h1>
   <p>
-    <strong>Tailwind CSS, But in C</strong>
-  </p>
-  <p>
-    <a href="https://github.com/mbaraa/cwindcss/actions/workflows/tests.yml">
-      <img src="https://github.com/mbaraa/cwindcss/actions/workflows/tests.yml/badge.svg" alt="Tests">
-    </a>
+    <strong>Tailwind CSS, But cooler and in C!</strong>
   </p>
 </div>
 
@@ -20,7 +15,7 @@ _Note: this is a fling side-project that could die anytime so don't get your hop
 # Installation:
 
 ```bash
-git clone https://github.com/mbaraa/cwindcss
+git clone https://codeberg.org/lordbaraa/cwindcss.git
 cd cwindcss
 make
 sudo make install
@@ -236,4 +231,4 @@ CSS has a wide variety of units for expressing different types of values. Here's
 
 ---
 
-Made with 🧉 by [Baraa Al-Masri](https://mbaraa.com)
+Made with 🧉 by [Lord Baraa](https://lordbaraa.net)
