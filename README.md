@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://dankmuzikk.com" target="_blank"><img src="https://codeberg.org/lordbaraa/cwindcss/src/branch/master/docs/logo.png" width="150" /></a>
+  <a href="https://codeberg.org/lordbaraa/cwindcss" target="_blank"><img src="https://codeberg.org/lordbaraa/cwindcss/raw/branch/master/docs/logo.png" width="150" /></a>
   <h1>Cwind CSS</h1>
   <p>
     <strong>Tailwind CSS, But cooler and in C!</strong>
@@ -9,8 +9,6 @@
 # About
 
 **Cwind CSS** A [Tailwind CSS](https://tailwindcss.com/) port in C, just for the fun of it.
-
-_Note: this is a fling side-project that could die anytime so don't get your hopes up._
 
 # Installation:
 
