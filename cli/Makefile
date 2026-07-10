@@ -3,7 +3,7 @@ BINARY_NAME=cwindcss
 all: build
 
 build:
-	gcc ../cwindcss.o cli.c -o $(BINARY_NAME)
+	gcc cli.c ../libcwindcss.a -o $(BINARY_NAME)
 
 install:
 	@if [ "$(shell id -u)" = "0" ]; then \
@@ -21,4 +21,4 @@ uninstall:
 	fi
 
 clean:
-	rm $(BINARY_NAME)
+	-rm $(BINARY_NAME)
