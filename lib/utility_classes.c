@@ -32,6 +32,52 @@ struct class_fmt_hash_item *get_util_class(char *uc) {
   return util_class;
 }
 
+char *extract_css_class_definition(struct class_fmt_hash_item *css_class,
+                                   char *class_name, char *value) {
+  if (css_class == NULL || css_class->fmt_str == NULL) {
+    return NULL;
+  }
+
+  size_t fmt_len = strlen(css_class->fmt_str);
+  size_t class_name_len = strlen(class_name);
+
+  char *css_class_name = (char *)malloc(class_name_len + 2);
+  size_t j = 0;
+  for (size_t i = 0; i < class_name_len; i++, j++) {
+    char chr = class_name[i];
+    if (!((chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z') ||
+          (chr >= '0' && chr <= '9') || chr == '-' || chr == '_')) {
+      css_class_name[j] = '\\';
+      css_class_name[++j] = chr;
+      continue;
+    }
+    css_class_name[j] = chr;
+  }
+  css_class_name[j++] = '\0';
+  css_class_name = realloc(css_class_name, j);
+
+  char *css_class_definition = NULL;
+  switch (css_class->type) {
+  case NO_REPLACEMENT:
+    css_class_definition = (char *)malloc(fmt_len + class_name_len);
+    sprintf(css_class_definition, css_class->fmt_str, css_class_name);
+    break;
+  case SINGLE_REPLACEMENT:
+    css_class_definition =
+        (char *)malloc(fmt_len + class_name_len + (strlen(value)));
+    sprintf(css_class_definition, css_class->fmt_str, css_class_name, value);
+    break;
+  case DOUBLE_REPLACEMENT:
+    css_class_definition =
+        (char *)malloc(fmt_len + class_name_len + (2 * strlen(value)));
+    sprintf(css_class_definition, css_class->fmt_str, css_class_name, value,
+            value);
+    break;
+  }
+
+  return css_class_definition;
+}
+
 void init_utility_classes() {
   __utility_class_pattern = compile_regex(
       "^-?!?([a-zA-Z0-9]+:)?[_a-zA-Z]+[_a-zA-Z0-9-]*(-(\\[.*\\]|\\w+))?$");

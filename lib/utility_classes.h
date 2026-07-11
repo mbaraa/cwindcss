@@ -25,8 +25,10 @@ struct class_fmt_hash_item {
   UT_hash_handle hh;
 };
 
-struct class_fmt_hash_item *get_util_class(char *uc);
 void add_util_class(char *uc, char *fmt, enum class_value_type type);
+struct class_fmt_hash_item *get_util_class(char *uc);
+char *extract_css_class_definition(struct class_fmt_hash_item *css_class,
+                                   char *class_name, char *value);
 
 regex_t *get_utility_class_pattern();
 

@@ -106,7 +106,6 @@ char **cwind_extract_css_classes(char *html, size_t *out_classes_count) {
 // replace char* with buffer
 char *cwind_process_utility_classes(char *input_html) {
   int stat;
-  char msgbuf[100];
   size_t classes_count = 0;
   char **classes = cwind_extract_css_classes(input_html, &classes_count);
   char *output = "";
@@ -116,125 +115,49 @@ char *cwind_process_utility_classes(char *input_html) {
       continue;
     }
 
-    MatchData *value = find_all_string_submatch(
+    MatchData *num_classes = find_all_string_submatch(
         __numerical_utility_class_value_pattern, classes[i]);
-    /* size_t j = 0; */
-    /* while (value[j].match != NULL) { */
-    if (value[0].match != NULL) {
-      struct class_fmt_hash_item *css_class_format =
-          get_util_class(value[0].group1);
-      if (css_class_format == NULL || css_class_format->fmt_str == NULL) {
-        continue;
-      }
-      size_t len = strlen(css_class_format->fmt_str);
-
-      char *css_class_definition =
-          (char *)malloc(len + (2 * strlen(value[0].group2)));
-      size_t css_class_name_len = strlen(value[0].match);
-      char *css_class_name = (char *)malloc(css_class_name_len + 2);
-      for (size_t i = 0, j = 0; i < css_class_name_len; i++, j++) {
-        char chr = value[0].match[i];
-        if (!((chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z') ||
-              (chr >= '0' && chr <= '9') || chr == '-' || chr == '_')) {
-          css_class_name[j] = '\\';
-          css_class_name[++j] = chr;
-          continue;
-        }
-        css_class_name[j] = chr;
-      }
-
-      switch (css_class_format->type) {
-      case SINGLE_REPLACEMENT:
-        sprintf(css_class_definition, css_class_format->fmt_str, css_class_name,
-                value[0].group2);
-        break;
-      case NO_REPLACEMENT:
-        /* sprintf(css_class_definition, css_class_format->fmt_str,
-         * css_class_name); */
-        break;
-      case DOUBLE_REPLACEMENT:
-        sprintf(css_class_definition, css_class_format->fmt_str, css_class_name,
-                value[0].group2, value[0].group2);
-        break;
-      }
-
-      output = concat(output, strdup(css_class_definition));
-      output = concat(output, " ");
-      free(css_class_definition);
-      continue;
-    }
-
-    value = find_all_string_submatch(
+    MatchData *num_pre_classes = find_all_string_submatch(
         __numerical_utility_class_predefined_pattern, classes[i]);
+    MatchData *word_classes = find_all_string_submatch(
+        __only_words_utility_class_value_pattern, classes[i]);
+
     /* size_t j = 0; */
     /* while (value[j].match != NULL) { */
-    if (value[0].match != NULL) {
-      struct class_fmt_hash_item *css_class_format =
-          get_util_class(value[0].group1);
-      if (css_class_format == NULL || css_class_format->fmt_str == NULL) {
-        continue;
-      }
-      size_t len = strlen(css_class_format->fmt_str);
+    /* size_t j = 0; */
+    /* while (value[j].match != NULL) { */
+    /* if (value[0].match != NULL && strcmp(value[0].match, classes[i]) == 0) {
+     */
 
-      char *css_class_definition =
-          (char *)malloc(len + (2 * strlen(value[0].group2)));
-      size_t css_class_name_len = strlen(value[0].match);
-      char *css_class_name = (char *)malloc(css_class_name_len + 2);
-      for (size_t i = 0, j = 0; i < css_class_name_len; i++, j++) {
-        char chr = value[0].match[i];
-        if (!((chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z') ||
-              (chr >= '0' && chr <= '9') || chr == '-' || chr == '_')) {
-          css_class_name[j] = '\\';
-          css_class_name[++j] = chr;
-          continue;
-        }
-        css_class_name[j] = chr;
-      }
+    char *css_class_definition = NULL;
+    char *class_id = NULL;
+    char *class_name = NULL;
+    char *class_thing_value = NULL;
 
-      switch (css_class_format->type) {
-      case SINGLE_REPLACEMENT:
-        sprintf(css_class_definition, css_class_format->fmt_str, css_class_name,
-                value[0].group2);
-        break;
-      case NO_REPLACEMENT:
-        /* sprintf(css_class_definition, css_class_format->fmt_str,
-         * css_class_name); */
-        break;
-      case DOUBLE_REPLACEMENT:
-        sprintf(css_class_definition, css_class_format->fmt_str, css_class_name,
-                value[0].group2, value[0].group2);
-        break;
-      }
+    if (num_classes != NULL && num_classes[0].match != NULL) {
+      class_id = num_classes[0].group1;
+      class_thing_value = num_classes[0].group2;
+      class_name = num_classes[0].match;
+    } else if (num_pre_classes != NULL && num_pre_classes[0].match != NULL) {
+      class_id = num_pre_classes[0].group1;
+      class_thing_value = num_pre_classes[0].group2;
+      class_name = num_pre_classes[0].match;
+    } else if (word_classes != NULL && word_classes[0].match != NULL) {
+      class_id = word_classes[0].group1;
+      class_name = word_classes[0].match;
+    }
 
-      output = concat(output, strdup(css_class_definition));
-      output = concat(output, " ");
-      free(css_class_definition);
+    struct class_fmt_hash_item *css_class = get_util_class(class_id);
+    css_class_definition =
+        extract_css_class_definition(css_class, class_name, class_thing_value);
+
+    if (css_class_definition == NULL) {
       continue;
     }
 
-    value = find_all_string_submatch(__only_words_utility_class_value_pattern,
-                                     classes[i]);
-    /* size_t j = 0; */
-    /* while (value[j].match != NULL) { */
-    if (value[0].match != NULL && strcmp(value[0].match, classes[i]) == 0) {
-      struct class_fmt_hash_item *css_class_format =
-          get_util_class(value[0].match);
-      if (css_class_format == NULL || css_class_format->fmt_str == NULL) {
-        continue;
-      }
-
-      size_t len = strlen(css_class_format->fmt_str);
-
-      char *css_class_definition =
-          (char *)malloc(len + (2 * strlen(value[0].match)));
-      size_t css_class_name_len = strlen(value[0].match);
-      sprintf(css_class_definition, css_class_format->fmt_str, value[0].match);
-
-      output = concat(output, strdup(css_class_definition));
-      output = concat(output, " ");
-      free(css_class_definition);
-      continue;
-    }
+    output = concat(output, strdup(css_class_definition));
+    output = concat(output, " ");
+    free(css_class_definition);
     /* j++; */
     /* } */
   }
