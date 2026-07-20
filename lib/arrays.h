@@ -8,6 +8,7 @@
 #define ARRAYS_OK 0
 #define ARRAYS_OUT_OF_BOUND 1
 #define ARRAYS_INVALID_TYPE 2
+#define ARRAYS_MEMORY_ERROR 3
 
 typedef char none;
 
@@ -31,7 +32,9 @@ typedef union {
 } array_item;
 
 typedef struct {
+  size_t cap;
   size_t len;
+  // TODO: change to const
   array_type type;
   array_item *items;
 } array;
@@ -39,10 +42,11 @@ typedef struct {
 array *array_new(size_t size, array_type type);
 void array_destroy(array *a);
 array_item array_at(array *a, size_t idx);
-int array_set_int32_at(array *a, size_t idx, int item);
+int array_set_int32_at(array *a, size_t idx, const int item);
 int array_set_double_at(array *a, size_t idx, double item);
 int array_set_string_at(array *a, size_t idx, const char *item);
 int array_set_pair_at(array *a, size_t idx, const pair *item);
+int array_push_pair(array *a, const pair *item);
 bool array_is_item_none(array_item item);
 
 #ifndef ARRAY_ITER

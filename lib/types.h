@@ -2,14 +2,21 @@
 #define _TYPES_H
 
 typedef struct {
+  int first;
+  int second;
+} intint_pair;
+
+typedef struct {
   char *first;
   char *second;
 } strstr_pair;
 
 typedef union {
+  intint_pair *intint;
   strstr_pair *strstr;
 } pair;
 
+pair *pair_new();
 void pair_destroy(pair *p);
 
 #endif // _TYPES_H
