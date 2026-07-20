@@ -9,7 +9,7 @@ CLI=cwindcss-cli
 CFLAGS+=-Wall -Wextra -Wmissing-declarations -Wshadow
 CFLAGS+=-Wstrict-prototypes -Wmissing-prototypes
 CFLAGS+=-Wpointer-arith -Wcast-qual -Wsign-compare
-CFLAGS+=-O2 -fPIC -g
+CFLAGS+=-std=c23 -O2 -fPIC -g
 CFLAGS+=-ldl -lm
 LDFLAGS+=-ldl -lm
 
