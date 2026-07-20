@@ -21,6 +21,12 @@ void add_util_class(char *uc, char *fmt, enum class_value_type type) {
   HASH_ADD_STR(__classes_values, util_class, s);
 }
 
+void add_util_classes(array *uc_fmt_pairs, enum class_value_type type) {
+  ARRAY_ITER(uc_fmt_pairs, it) {
+    add_util_class(it.pair->strstr->first, it.pair->strstr->second, type);
+  }
+}
+
 struct class_fmt_hash_item *get_util_class(char *uc) {
   struct class_fmt_hash_item *util_class = NULL;
 

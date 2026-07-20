@@ -1,6 +1,7 @@
 #ifndef _UTILITY_CLASSES_H
 #define _UTILITY_CLASSES_H
 
+#include "arrays.h"
 #include <regex.h>
 #include <stdbool.h>
 #include <uthash.h>
@@ -26,9 +27,13 @@ struct class_fmt_hash_item {
 };
 
 void add_util_class(char *uc, char *fmt, enum class_value_type type);
+void add_util_classes(array *uc_fmt_pairs, enum class_value_type type);
 struct class_fmt_hash_item *get_util_class(char *uc);
 char *extract_css_class_definition(struct class_fmt_hash_item *css_class,
                                    char *class_name, char *value);
+
+typedef void (*add_util_class_def)(char *uc, char *fmt,
+                                   enum class_value_type type);
 
 regex_t *get_utility_class_pattern();
 
