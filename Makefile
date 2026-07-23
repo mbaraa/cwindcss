@@ -25,8 +25,8 @@ libcwindcss.so: cwindcss.o
 	ar rcs libcwindcss.a *.o
 	#$(CC) -shared -o libcwindcss.so *.o $(LDFLAGS)
 
-test:
-	cd tests && go test -v ./...
+test: cwindcss.o libcwindcss.so
+	cd tests && make && make run
 
 $(CLI): cwindcss.o
 	cd cli && make
@@ -48,3 +48,4 @@ uninstall:
 clean:
 	rm -f *.o libcwindcss.a
 	cd cli && make clean
+	cd tests && make clean
