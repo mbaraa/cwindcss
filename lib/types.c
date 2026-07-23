@@ -3,7 +3,7 @@
 
 pair *pair_new() {
   pair *p = (pair *)malloc(sizeof(pair));
-  p->intint = NULL;
+  /* p->intint = NULL; */
   p->strstr = (strstr_pair *)malloc(sizeof(strstr_pair));
   if (!p->strstr) {
     free(p);
@@ -23,6 +23,9 @@ pair *pair_new() {
 }
 
 void pair_destroy(pair *p) {
+  if (p == NULL) {
+    return;
+  }
   if (p->strstr != NULL) {
     if (p->strstr->first != NULL) {
       free((void *)p->strstr->first);
@@ -36,4 +39,14 @@ void pair_destroy(pair *p) {
   /* free((void *)p->intint); */
   /* } */
   free(p);
+}
+
+void pair_shallow_destroy(pair *p) {
+  if (p == NULL) {
+    return;
+  }
+  if (p->strstr != NULL) {
+    free((void *)p->strstr);
+  }
+  /* free(p); */
 }

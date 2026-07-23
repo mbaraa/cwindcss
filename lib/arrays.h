@@ -41,6 +41,7 @@ typedef struct {
 
 array *array_new(size_t size, array_type type);
 void array_destroy(array *a);
+void array_shallow_destroy(array *a);
 array_item array_at(array *a, size_t idx);
 int array_set_int32_at(array *a, size_t idx, const int item);
 int array_set_double_at(array *a, size_t idx, double item);
@@ -51,8 +52,10 @@ bool array_is_item_none(array_item item);
 
 #ifndef ARRAY_ITER
 #define ARRAY_ITER(a, it)                                                      \
-  array_item it = (a->len > 0 ? array_at(a, 0) : (array_item){.none = 69});    \
-  for (size_t i = 0; i < a->len; it = array_at(a, ++i))
+  for (array_item it =                                                         \
+           (a->len > 0 ? array_at(a, 0) : (array_item){.none = 69});           \
+       it.none != 69; it = (array_item){.none = 69})                           \
+    for (size_t i = 0; i < a->len; it = array_at(a, ++i))
 #endif // ARRAY_ITER
 
 #endif // _ARRAYS_H

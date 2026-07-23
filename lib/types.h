@@ -12,11 +12,12 @@ typedef struct {
 } intint_pair;
 
 typedef union {
-  intint_pair *intint;
+  // intint_pair *intint;
   strstr_pair *strstr;
 } pair;
 
 pair *pair_new();
 void pair_destroy(pair *p);
+void pair_shallow_destroy(pair *p);
 
 #endif // _TYPES_H

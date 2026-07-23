@@ -29,6 +29,11 @@ void array_destroy(array *a) {
   free(a);
 }
 
+void array_shallow_destroy(array *a) {
+  free(a->items);
+  free(a);
+}
+
 array_item array_at(array *a, size_t idx) {
   array_item item;
   item.none = NONE;
@@ -77,7 +82,6 @@ int array_resize(array *a) {
   }
 
   size_t new_cap = (a->cap) * 2;
-  printf("old_cap: %lu\nnew_cap: %lu\n", a->cap, new_cap);
   array_item *new_items = realloc(a->items, new_cap * sizeof(array_item));
   if (new_items == NULL) {
     return ARRAYS_MEMORY_ERROR;

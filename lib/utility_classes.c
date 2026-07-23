@@ -12,19 +12,14 @@ struct class_fmt_hash_item *__classes_values = NULL;
 
 regex_t *get_utility_class_pattern() { return __utility_class_pattern; }
 
-void add_util_class(char *uc, char *fmt, enum class_value_type type) {
+void add_util_class(const char *uc, const char *fmt,
+                    enum class_value_type type) {
   struct class_fmt_hash_item *s =
       (struct class_fmt_hash_item *)malloc(sizeof(struct class_fmt_hash_item));
-  s->util_class = uc;
-  s->fmt_str = fmt;
+  s->util_class = strdup(uc);
+  s->fmt_str = strdup(fmt);
   s->type = type;
   HASH_ADD_STR(__classes_values, util_class, s);
-}
-
-void add_util_classes(array *uc_fmt_pairs, enum class_value_type type) {
-  ARRAY_ITER(uc_fmt_pairs, it) {
-    add_util_class(it.pair->strstr->first, it.pair->strstr->second, type);
-  }
 }
 
 struct class_fmt_hash_item *get_util_class(char *uc) {
@@ -118,7 +113,20 @@ void init_utility_classes() {
       compile_regex("^([\\-\\!a-z0-9-]+)$");
 }
 
+void destroy_classes_hash() {
+  struct class_fmt_hash_item *class, *tmp;
+
+  HASH_ITER(hh, __classes_values, class, tmp) {
+    HASH_DEL(__classes_values, class);
+    free(class->util_class);
+    free(class->fmt_str);
+    free(class);
+  }
+  free(tmp);
+}
+
 void destroy_utility_classes() {
   regfree(__utility_class_pattern);
   regfree(__numerical_utility_class_value_pattern);
+  destroy_classes_hash();
 }
