@@ -6,7 +6,7 @@ array *array_new(size_t size, array_type type) {
   array *a = (array *)malloc(sizeof(array));
   a->type = type;
   a->len = size;
-  a->cap = size * 2;
+  a->cap = (size > 0 ? size : 4) * 2;
   size_t items_size = sizeof(array_item) * a->cap;
   a->items = (array_item *)malloc(items_size);
 
@@ -16,12 +16,13 @@ array *array_new(size_t size, array_type type) {
 }
 
 void array_destroy(array *a) {
-  for (size_t i = 0; i < a->len; i++) {
-    if (a->type == STRINGS) {
-      free((void *)a->items[i].string);
+  for (size_t i = 0; i < a->cap; i++) {
+    array_item item = a->items[i];
+    if (a->type == STRINGS && item.string != NULL) {
+      free((void *)item.string);
     }
-    if (a->type == PAIRS) {
-      pair_destroy((pair *)a->items[i].pair);
+    if (a->type == PAIRS && item.pair != NULL) {
+      pair_destroy((pair *)item.pair);
     }
   }
   free(a->items);
@@ -75,7 +76,8 @@ int array_resize(array *a) {
     return ARRAYS_OK;
   }
 
-  size_t new_cap = (a->cap == 0 ? 1 : a->cap) * 2;
+  size_t new_cap = (a->cap) * 2;
+  printf("old_cap: %lu\nnew_cap: %lu\n", a->cap, new_cap);
   array_item *new_items = realloc(a->items, new_cap * sizeof(array_item));
   if (new_items == NULL) {
     return ARRAYS_MEMORY_ERROR;
