@@ -3,7 +3,7 @@ BINARY_NAME=cwindcss
 all: build
 
 build:
-	gcc cli.c ../libcwindcss.a -o $(BINARY_NAME)
+	gcc -std=c23 main.c ../libcwindcss.a -o $(BINARY_NAME)
 
 install:
 	@if [ "$(shell id -u)" = "0" ]; then \
