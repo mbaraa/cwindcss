@@ -1,5 +1,6 @@
 #include "css.h"
 #include "arrays.h"
+#include "types.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -24,8 +25,6 @@ array *get_class_and_fmt_variations(char *class_matcher, char *property_name,
   array *output = array_new(vc, PAIRS);
 
   size_t class_matcher_len = strlen(class_matcher);
-  size_t property_name_len = strlen(property_name);
-  size_t property_value_len = strlen(property_value);
 
   size_t i = 0;
   VARIATION_ITER(v) {
@@ -34,30 +33,31 @@ array *get_class_and_fmt_variations(char *class_matcher, char *property_name,
     }
 
     char *class_name = NULL;
+    char *pre_fmt = NULL;
     char *fmt = NULL;
+    int required_len = 0;
 
     switch (variations & v) {
     case NORMAL:
       class_name = strdup(class_matcher);
-      fmt = (char *)malloc(property_name_len + property_value_len + 3 /*.%s*/ +
-                           4 /*{} ;*/);
-      sprintf(fmt, ".%%s {%s: %s;}", property_name, property_value);
+      pre_fmt = ".%%s {%s: %s;}";
       break;
     case NEGATIVE:
-      class_name = (char *)malloc(sizeof(char) * class_matcher_len + 1);
+      class_name = (char *)malloc(class_matcher_len + 2);
       sprintf(class_name, "-%s", class_matcher);
-      fmt = (char *)malloc(property_name_len + property_value_len + 3 /*.%s*/ +
-                           5 /*{} ;-*/);
-      sprintf(fmt, ".%%s {%s: -%s;}", property_name, property_value);
+
+      pre_fmt = ".%%s {%s: -%s;}";
       break;
     case IMPORTANT:
-      class_name = (char *)malloc(sizeof(char) * class_matcher_len + 1);
+      class_name = (char *)malloc(class_matcher_len + 2);
       sprintf(class_name, "!%s", class_matcher);
-      fmt = (char *)malloc(property_name_len + property_value_len + 3 /*.%s*/ +
-                           15 /*{} ; !important*/);
-      sprintf(fmt, ".%%s {%s: %s !important;}", property_name, property_value);
+
+      pre_fmt = ".%%s {%s: %s !important;}";
       break;
     }
+    required_len = snprintf(NULL, 0, pre_fmt, property_name, property_value);
+    fmt = (char *)malloc(required_len + 1);
+    snprintf(fmt, required_len + 1, pre_fmt, property_name, property_value);
 
     pair *p = pair_new();
     p->strstr->first = class_name;
