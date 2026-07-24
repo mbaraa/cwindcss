@@ -99,16 +99,22 @@ char **cwind_extract_css_classes(char *html, size_t *out_classes_count) {
   }
 
   regfree(classes_pattern);
+  free(all_classes);
 
   return classes;
 }
 
-// replace char* with buffer
+// TODO: replace char* with buffer
 char *cwind_process_utility_classes(char *input_html) {
   int stat;
   size_t classes_count = 0;
   char **classes = cwind_extract_css_classes(input_html, &classes_count);
-  char *output = "";
+
+  char *output = strdup("");
+  if (!output) {
+    return NULL;
+  }
+
   for (size_t i = 0; i < classes_count; i++) {
     stat = regexec(__utility_class_pattern, classes[i], 0, NULL, 0);
     if (stat) {
@@ -121,13 +127,6 @@ char *cwind_process_utility_classes(char *input_html) {
         __numerical_utility_class_predefined_pattern, classes[i]);
     MatchData *word_classes = find_all_string_submatch(
         __only_words_utility_class_value_pattern, classes[i]);
-
-    /* size_t j = 0; */
-    /* while (value[j].match != NULL) { */
-    /* size_t j = 0; */
-    /* while (value[j].match != NULL) { */
-    /* if (value[0].match != NULL && strcmp(value[0].match, classes[i]) == 0) {
-     */
 
     char *css_class_definition = NULL;
     char *class_id = NULL;
@@ -147,6 +146,10 @@ char *cwind_process_utility_classes(char *input_html) {
       class_name = word_classes[0].match;
     }
 
+    if (class_id == NULL) {
+      continue;
+    }
+
     struct class_fmt_hash_item *css_class = get_util_class(class_id);
     css_class_definition =
         extract_css_class_definition(css_class, class_name, class_thing_value);
@@ -155,74 +158,118 @@ char *cwind_process_utility_classes(char *input_html) {
       continue;
     }
 
-    output = concat(output, strdup(css_class_definition));
-    output = concat(output, " ");
+    char *temp = concat(output, css_class_definition);
+    free(output);
+    output = temp;
+
+    temp = concat(output, " ");
+    free(output);
+    output = temp;
+
     free(css_class_definition);
-    /* j++; */
-    /* } */
   }
-  output[strlen(output) - 1] = '\0';
+
+  size_t out_len = strlen(output);
+  if (out_len > 0) {
+    output[out_len - 1] = '\0';
+  }
 
   return output;
 }
 
-int cwind_read_files_rec(const char *path, const char *extension_filter,
-                         char **out_buffer) {
+int cwind_read_files_rec_impl(const char *path, const char *extension_filter,
+                              char **out_buffer, size_t *buf_len,
+                              size_t *buf_cap) {
   DIR *d;
   struct dirent *dir;
   struct stat path_stat;
-  char full_path[256];
+  char full_path[512];
   FILE *current_file = NULL;
 
   d = opendir(path);
-
-  if (d) {
-    while ((dir = readdir(d)) != NULL) {
-      if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0) {
-        continue;
-      }
-
-      snprintf(full_path, sizeof(full_path), "%s/%s", path, dir->d_name);
-
-      if (stat(full_path, &path_stat) == 0) {
-        if (S_ISREG(path_stat.st_mode) &&
-            has_suffix(full_path, extension_filter)) {
-          printf("processing: %s ", full_path);
-          current_file = fopen(full_path, "r+");
-          if (current_file == NULL) {
-            puts("❌");
-            continue;
-          }
-          char *smol_buffer = (char *)malloc(path_stat.st_size);
-          fread(smol_buffer, path_stat.st_size, 1, current_file);
-          size_t buf_len = strlen(*out_buffer);
-          if (buf_len < path_stat.st_size) {
-            *out_buffer = (char *)malloc(buf_len + path_stat.st_size);
-          }
-          strcat(*out_buffer, smol_buffer);
-          puts("✅");
-          /* fclose(current_file); */
-        } else if (S_ISDIR(path_stat.st_mode)) {
-          cwind_read_files_rec(full_path, extension_filter, out_buffer);
-        }
-      } else {
-        perror("Error getting file status");
-        return CWIND_ERROR;
-      }
-    }
-    closedir(d);
-  } else {
+  if (!d) {
     perror("Error opening directory");
     return CWIND_ERROR;
   }
 
+  while ((dir = readdir(d)) != NULL) {
+    if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0) {
+      continue;
+    }
+
+    snprintf(full_path, sizeof(full_path), "%s/%s", path, dir->d_name);
+
+    if (stat(full_path, &path_stat) != 0) {
+      perror("Error getting file status");
+      closedir(d);
+      return CWIND_ERROR;
+    }
+
+    if (S_ISREG(path_stat.st_mode) && has_suffix(full_path, extension_filter)) {
+      printf("processing: %s ", full_path);
+
+      current_file = fopen(full_path, "rb");
+      if (current_file == NULL) {
+        puts("X");
+        continue;
+      }
+
+      size_t file_size = path_stat.st_size;
+
+      size_t required_space = *buf_len + file_size + 1;
+      if (required_space > *buf_cap) {
+        size_t new_cap = *buf_cap == 0 ? required_space * 2 : *buf_cap * 2;
+        if (new_cap < required_space)
+          new_cap = required_space;
+
+        char *next_buf = (char *)realloc(*out_buffer, new_cap);
+        if (!next_buf) {
+          perror("Out of memory");
+          fclose(current_file);
+          closedir(d);
+          return CWIND_ERROR;
+        }
+        *out_buffer = next_buf;
+        *buf_cap = new_cap;
+      }
+
+      size_t bytes_read =
+          fread(*out_buffer + *buf_len, 1, file_size, current_file);
+      *buf_len += bytes_read;
+      (*out_buffer)[*buf_len] = '\0';
+
+      puts("✓");
+      fclose(current_file);
+
+    } else if (S_ISDIR(path_stat.st_mode)) {
+      int res = cwind_read_files_rec_impl(full_path, extension_filter,
+                                          out_buffer, buf_len, buf_cap);
+      if (res != CWIND_OK) {
+        closedir(d);
+        return CWIND_ERROR;
+      }
+    }
+  }
+
+  closedir(d);
   return CWIND_OK;
+}
+
+int cwind_read_files_rec(const char *path, const char *extension_filter,
+                         char **out_buffer) {
+  size_t buf_len = 0;
+  size_t buf_cap = 0;
+
+  *out_buffer = NULL;
+
+  return cwind_read_files_rec_impl(path, extension_filter, out_buffer, &buf_len,
+                                   &buf_cap);
 }
 
 int cwind_generate_output_css_file(const char *path,
                                    const char *extension_filter,
                                    const char *out_path) {
-  char *buffer = (char *)malloc(1);
+  char *buffer = NULL;
   int stat = cwind_read_files_rec(path, extension_filter, &buffer);
   if (stat != CWIND_OK) {
     return stat;

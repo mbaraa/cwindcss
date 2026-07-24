@@ -35,47 +35,76 @@ struct class_fmt_hash_item *get_util_class(char *uc) {
 
 char *extract_css_class_definition(struct class_fmt_hash_item *css_class,
                                    char *class_name, char *value) {
-  if (css_class == NULL || css_class->fmt_str == NULL) {
+  if (css_class == NULL || css_class->fmt_str == NULL || class_name == NULL) {
     return NULL;
   }
 
   size_t fmt_len = strlen(css_class->fmt_str);
   size_t class_name_len = strlen(class_name);
 
-  char *css_class_name = (char *)malloc(class_name_len + 2);
+  char *css_class_name = (char *)malloc(
+      (class_name_len * 2 /*in case every character needs escaping*/) +
+      1 /*null terminator*/);
+  if (!css_class_name) {
+    return NULL;
+  }
+
   size_t j = 0;
-  for (size_t i = 0; i < class_name_len; i++, j++) {
+  for (size_t i = 0; i < class_name_len; i++) {
     char chr = class_name[i];
     if (!((chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z') ||
           (chr >= '0' && chr <= '9') || chr == '-' || chr == '_')) {
-      css_class_name[j] = '\\';
-      css_class_name[++j] = chr;
+      css_class_name[j++] = '\\';
+      css_class_name[j++] = chr;
       continue;
     }
-    css_class_name[j] = chr;
+    css_class_name[j++] = chr;
   }
-  css_class_name[j++] = '\0';
-  css_class_name = realloc(css_class_name, j);
+  css_class_name[j] = '\0';
+
+  char *temp_realloc = realloc(css_class_name, j + 1);
+  if (temp_realloc) {
+    css_class_name = temp_realloc;
+  }
+
+  size_t val_len = value ? strlen(value) : 0;
+  size_t escaped_name_len = strlen(css_class_name);
 
   char *css_class_definition = NULL;
+  size_t alloc_size = 0;
+
+  // 16 bytes minimum safity bytes to account for format
+  // specifier expansions and null terminator
   switch (css_class->type) {
   case NO_REPLACEMENT:
-    css_class_definition = (char *)malloc(fmt_len + class_name_len);
-    sprintf(css_class_definition, css_class->fmt_str, css_class_name);
+    alloc_size = fmt_len + escaped_name_len + 16;
+    css_class_definition = (char *)malloc(alloc_size);
+    if (css_class_definition) {
+      snprintf(css_class_definition, alloc_size, css_class->fmt_str,
+               css_class_name);
+    }
     break;
+
   case SINGLE_REPLACEMENT:
-    css_class_definition =
-        (char *)malloc(fmt_len + class_name_len + (strlen(value)));
-    sprintf(css_class_definition, css_class->fmt_str, css_class_name, value);
+    alloc_size = fmt_len + escaped_name_len + val_len + 16;
+    css_class_definition = (char *)malloc(alloc_size);
+    if (css_class_definition) {
+      snprintf(css_class_definition, alloc_size, css_class->fmt_str,
+               css_class_name, value ? value : "");
+    }
     break;
+
   case DOUBLE_REPLACEMENT:
-    css_class_definition =
-        (char *)malloc(fmt_len + class_name_len + (2 * strlen(value)));
-    sprintf(css_class_definition, css_class->fmt_str, css_class_name, value,
-            value);
+    alloc_size = fmt_len + escaped_name_len + (2 * val_len) + 16;
+    css_class_definition = (char *)malloc(alloc_size);
+    if (css_class_definition) {
+      snprintf(css_class_definition, alloc_size, css_class->fmt_str,
+               css_class_name, value ? value : "", value ? value : "");
+    }
     break;
   }
 
+  free(css_class_name);
   return css_class_definition;
 }
 
