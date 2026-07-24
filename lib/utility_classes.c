@@ -156,6 +156,12 @@ void destroy_classes_hash() {
 
 void destroy_utility_classes() {
   regfree(__utility_class_pattern);
+  free(__utility_class_pattern);
   regfree(__numerical_utility_class_value_pattern);
+  free(__numerical_utility_class_value_pattern);
+  regfree(__numerical_utility_class_predefined_pattern);
+  free(__numerical_utility_class_predefined_pattern);
+  regfree(__only_words_utility_class_value_pattern);
+  free(__only_words_utility_class_value_pattern);
   destroy_classes_hash();
 }
