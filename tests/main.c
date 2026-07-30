@@ -26,18 +26,17 @@ void test_cwind_extract_css_classes_should_return_unique_classes(void) {
       "<h1 class=\"text-3xl lg:text-2xl md:hidden lg:block\">DankMuzikk</h1>"
       "</div>";
 
-  size_t out_classes_count = 0;
-  char **classes = cwind_extract_css_classes(html, &out_classes_count);
+  array *classes = cwind_extract_css_classes(html);
 
   struct str_int_hash_item *unique_classes = NULL;
-  for (size_t i = 0; i < out_classes_count; i++) {
+  ARRAY_ITER(classes, class) {
     struct str_int_hash_item *item = NULL;
 
-    HASH_FIND_STR(unique_classes, classes[i], item);
+    HASH_FIND_STR(unique_classes, class.string, item);
     if (item == NULL) {
       item =
           (struct str_int_hash_item *)malloc(sizeof(struct str_int_hash_item));
-      item->key = classes[i];
+      item->key = class.string;
       item->value = 1;
       HASH_ADD_STR(unique_classes, key, item);
     } else {
@@ -51,13 +50,15 @@ void test_cwind_extract_css_classes_should_return_unique_classes(void) {
   HASH_ITER(hh, unique_classes, item, tmp) {
     TEST_ASSERT_EQUAL_INT(1, item->value);
   }
+
+  array_destroy(classes);
 }
 
 void test_extract_css_classes_should_return_empty_array_when_no_classes_are_provided(
     void) {
-  size_t out_classes_count = 0;
-  char **classes = cwind_extract_css_classes("", &out_classes_count);
-  TEST_ASSERT_EQUAL_INT(0, out_classes_count);
+  array *classes = cwind_extract_css_classes("");
+  TEST_ASSERT_EQUAL_INT(0, classes->len);
+  array_destroy(classes);
 }
 
 void test_process_utility_classes_should_return_unique_css_classes_of_the_given_utility_classes(

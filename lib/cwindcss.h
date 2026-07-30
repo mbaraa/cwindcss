@@ -1,6 +1,7 @@
 #ifndef _CWINDCSS_H
 #define _CWINDCSS_H
 
+#include "arrays.h"
 #include <regex.h>
 #include <stddef.h>
 
@@ -9,7 +10,7 @@
 
 void cwind_init();
 void cwind_destroy();
-char **cwind_extract_css_classes(char *html, size_t *out_classes_count);
+array *cwind_extract_css_classes(char *html);
 char *cwind_process_utility_classes(char *input_html);
 int cwind_read_files_rec(const char *path, const char *extension_filter,
                          char **out_buffer);

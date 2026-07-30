@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#define NONE_ITEM                                                              \
+  (array_item) { .none = NONE }
+
 array *array_new(size_t size, array_type type) {
   array *a = (array *)malloc(sizeof(array));
   a->type = type;
@@ -10,15 +13,22 @@ array *array_new(size_t size, array_type type) {
   size_t items_size = sizeof(array_item) * a->cap;
   a->items = (array_item *)malloc(items_size);
 
-  memset(a->items, 0, items_size);
+  for (size_t i = 0; i < a->cap; i++) {
+    a->items[i] = NONE_ITEM;
+  }
 
   return a;
 }
 
 void array_destroy(array *a) {
+  printf("a->cap: %d\n", a->cap);
   for (size_t i = 0; i < a->cap; i++) {
     array_item item = a->items[i];
+    if (item.none == NONE) {
+      continue;
+    }
     if (a->type == STRINGS && item.string != NULL) {
+      printf("idx kurwa: %d\n", i);
       free((void *)item.string);
     }
     if (a->type == PAIRS && item.pair != NULL) {
@@ -87,6 +97,11 @@ int array_resize(array *a) {
     return ARRAYS_MEMORY_ERROR;
   }
 
+  for (size_t i = a->len; i < new_cap; i++) {
+    printf("noning new idx: %d\n", i);
+    new_items[i] = NONE_ITEM;
+  }
+
   a->items = new_items;
   a->cap = new_cap;
 
@@ -128,6 +143,21 @@ int array_set_string_at(array *a, size_t idx, const char *item) {
   }
 
   a->items[idx] = (array_item){.string = (char *)item};
+  return ARRAYS_OK;
+}
+
+int array_push_string(array *a, const char *item) {
+  int stat = assert_type(a, STRINGS);
+  if (stat != ARRAYS_OK) {
+    return stat;
+  }
+
+  stat = array_resize(a);
+  if (stat != ARRAYS_OK) {
+    return stat;
+  }
+
+  a->items[a->len++] = (array_item){.string = (char *)item};
   return ARRAYS_OK;
 }
 

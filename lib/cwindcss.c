@@ -39,15 +39,16 @@ void cwind_init() {
 
 void cwind_destroy() { destroy_utility_classes(); }
 
-char **cwind_extract_css_classes(char *html, size_t *out_classes_count) {
+array *cwind_extract_css_classes(char *html) {
   const char *classes_pattern_str = "class=\"([^\"]+)\"";
   regex_t *classes_pattern = compile_regex(classes_pattern_str);
 
   size_t sz = 0;
   match_data *matches = find_all_string_submatch(classes_pattern, html, &sz);
+  regfree(classes_pattern);
+  free(classes_pattern);
   if (sz == 0) {
-    *out_classes_count = 0;
-    return NULL;
+    return array_new(0, STRINGS);
   }
 
   char *all_classes = (char *)malloc(sizeof(char) * sz);
@@ -55,46 +56,49 @@ char **cwind_extract_css_classes(char *html, size_t *out_classes_count) {
     all_classes = strdup(matches[0].group1);
   }
   for (size_t i = 1; i < sz; i++) {
-    all_classes = concat(all_classes, " ");
-    all_classes = concat(all_classes, strdup(matches[i].group1));
+    char *tmp = concat(all_classes, " ");
+    free(all_classes);
+    all_classes = tmp;
+
+    tmp = concat(all_classes, matches[i].group1);
+    free(all_classes);
+    all_classes = tmp;
+  }
+  destroy_matches_data(matches, sz);
+
+  array *tokens = split_string(all_classes, " ");
+  free(all_classes);
+  if (tokens->len == 0) {
+    array_destroy(tokens);
+    return array_new(0, STRINGS);
   }
 
-  size_t tokens_count = 0;
-  char **tokens = split_string(all_classes, " ", &tokens_count);
-  if (tokens_count == 0) {
-    *out_classes_count = 0;
-    return NULL;
-  }
   struct str_bool_hash_item *unique_classes = NULL;
-  for (size_t i = 0; i < tokens_count; i++) {
+  ARRAY_ITER(tokens, token) {
     struct str_bool_hash_item *item = NULL;
 
-    HASH_FIND_STR(unique_classes, tokens[i], item);
+    printf("token blyayt: %s\n", token.string);
+    HASH_FIND_STR(unique_classes, token.string, item);
     if (item == NULL) {
       item = (struct str_bool_hash_item *)malloc(
           sizeof(struct str_bool_hash_item));
-      item->key = tokens[i];
+      item->key = strdup(token.string);
       item->value = true;
       HASH_ADD_STR(unique_classes, key, item);
     }
   }
+  array_destroy(tokens);
 
   size_t num_classes = unique_classes == NULL ? 0 : HASH_COUNT(unique_classes);
-  *out_classes_count = num_classes;
-  char **classes = (char **)malloc(sizeof(char *) * num_classes);
+  array *classes = array_new(num_classes, STRINGS);
 
   struct str_bool_hash_item *item = NULL, *tmp = NULL;
   int i = 0;
   HASH_ITER(hh, unique_classes, item, tmp) {
-    classes[i++] = strdup(item->key);
+    array_set_string_at(classes, i++, item->key);
     HASH_DEL(unique_classes, item);
     free(item);
   }
-
-  regfree(classes_pattern);
-  free(classes_pattern);
-  free(all_classes);
-  destroy_matches_data(matches, sz);
 
   return classes;
 }
@@ -102,27 +106,26 @@ char **cwind_extract_css_classes(char *html, size_t *out_classes_count) {
 // TODO: replace char* with buffer
 char *cwind_process_utility_classes(char *input_html) {
   int stat;
-  size_t classes_count = 0;
-  char **classes = cwind_extract_css_classes(input_html, &classes_count);
+  array *classes = cwind_extract_css_classes(input_html);
 
   char *output = strdup("");
   if (!output) {
     return NULL;
   }
 
-  for (size_t i = 0; i < classes_count; i++) {
-    stat = regexec(__utility_class_pattern, classes[i], 0, NULL, 0);
+  ARRAY_ITER(classes, class) {
+    stat = regexec(__utility_class_pattern, class.string, 0, NULL, 0);
     if (stat) {
       continue;
     }
 
     size_t num_count = 0, pre_count = 0, word_count = 0;
     match_data *num_classes = find_all_string_submatch(
-        __numerical_utility_class_value_pattern, classes[i], &num_count);
+        __numerical_utility_class_value_pattern, class.string, &num_count);
     match_data *num_pre_classes = find_all_string_submatch(
-        __numerical_utility_class_predefined_pattern, classes[i], &pre_count);
+        __numerical_utility_class_predefined_pattern, class.string, &pre_count);
     match_data *word_classes = find_all_string_submatch(
-        __only_words_utility_class_value_pattern, classes[i], &word_count);
+        __only_words_utility_class_value_pattern, class.string, &word_count);
 
     char *css_class_definition = NULL;
     char *class_id = NULL;
@@ -154,13 +157,13 @@ char *cwind_process_utility_classes(char *input_html) {
       goto free_things;
     }
 
-    char *temp = concat(output, css_class_definition);
+    char *tmp = concat(output, css_class_definition);
     free(output);
-    output = temp;
+    output = tmp;
 
-    temp = concat(output, " ");
+    tmp = concat(output, " ");
     free(output);
-    output = temp;
+    output = tmp;
 
   free_things:
     free(css_class_definition);
@@ -168,6 +171,8 @@ char *cwind_process_utility_classes(char *input_html) {
     destroy_matches_data(num_pre_classes, pre_count);
     destroy_matches_data(word_classes, word_count);
   }
+
+  /* array_destroy(classes); */
 
   size_t out_len = strlen(output);
   if (out_len > 0) {

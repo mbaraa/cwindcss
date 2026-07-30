@@ -1,8 +1,9 @@
 #include "strings.h"
+#include "stdio.h"
 
 char *concat(const char *s1, const char *s2) {
   size_t sz = strlen(s1) + strlen(s2) + 1;
-  char *result = (char *)malloc(strlen(s1) + strlen(s2) + 1);
+  char *result = (char *)malloc(sz);
   if (result == NULL) {
     return "";
   }
@@ -13,21 +14,22 @@ char *concat(const char *s1, const char *s2) {
   return result;
 }
 
-char **split_string(char *str, const char *delim, size_t *out_tokens_count) {
+array *split_string(char *str, const char *delim) {
   char *token = strtok(str, delim);
   if (token == NULL) {
     return NULL;
   }
-  char **tokens = (char **)malloc(sizeof(char *) * 2);
-  size_t i = 0;
+  array *tokens = array_new(0, STRINGS);
   while (token != NULL) {
-    tokens[i] = strdup(token);
-    i++;
-    tokens = (char **)realloc(tokens, sizeof(char *) * (i + 1));
+    int stat = array_push_string(tokens, strdup(token));
+    if (stat != ARRAYS_OK) {
+      printf("array error: %d\n", stat);
+      return array_new(0, STRINGS);
+    }
     token = strtok(NULL, delim);
   }
 
-  *out_tokens_count = i;
+  ARRAY_ITER(tokens, token) { printf("#####token blyayt: %s\n", token.string); }
 
   return tokens;
 }
