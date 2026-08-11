@@ -77,7 +77,6 @@ array *cwind_extract_css_classes(char *html) {
   ARRAY_ITER(tokens, token) {
     struct str_bool_hash_item *item = NULL;
 
-    printf("token blyayt: %s\n", token.string);
     HASH_FIND_STR(unique_classes, token.string, item);
     if (item == NULL) {
       item = (struct str_bool_hash_item *)malloc(
@@ -172,7 +171,7 @@ char *cwind_process_utility_classes(char *input_html) {
     destroy_matches_data(word_classes, word_count);
   }
 
-  /* array_destroy(classes); */
+  array_destroy(classes);
 
   size_t out_len = strlen(output);
   if (out_len > 0) {

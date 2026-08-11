@@ -21,14 +21,12 @@ array *array_new(size_t size, array_type type) {
 }
 
 void array_destroy(array *a) {
-  printf("a->cap: %d\n", a->cap);
   for (size_t i = 0; i < a->cap; i++) {
     array_item item = a->items[i];
     if (item.none == NONE) {
       continue;
     }
     if (a->type == STRINGS && item.string != NULL) {
-      printf("idx kurwa: %d\n", i);
       free((void *)item.string);
     }
     if (a->type == PAIRS && item.pair != NULL) {
@@ -98,7 +96,6 @@ int array_resize(array *a) {
   }
 
   for (size_t i = a->len; i < new_cap; i++) {
-    printf("noning new idx: %d\n", i);
     new_items[i] = NONE_ITEM;
   }
 

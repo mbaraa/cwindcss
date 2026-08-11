@@ -23,13 +23,10 @@ array *split_string(char *str, const char *delim) {
   while (token != NULL) {
     int stat = array_push_string(tokens, strdup(token));
     if (stat != ARRAYS_OK) {
-      printf("array error: %d\n", stat);
       return array_new(0, STRINGS);
     }
     token = strtok(NULL, delim);
   }
-
-  ARRAY_ITER(tokens, token) { printf("#####token blyayt: %s\n", token.string); }
 
   return tokens;
 }

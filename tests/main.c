@@ -41,7 +41,6 @@ void test_cwind_extract_css_classes_should_return_unique_classes(void) {
       HASH_ADD_STR(unique_classes, key, item);
     } else {
       item->value += 1;
-      HASH_ADD_STR(unique_classes, key, item);
     }
   }
 
@@ -49,6 +48,8 @@ void test_cwind_extract_css_classes_should_return_unique_classes(void) {
   int i = 0;
   HASH_ITER(hh, unique_classes, item, tmp) {
     TEST_ASSERT_EQUAL_INT(1, item->value);
+    HASH_DEL(unique_classes, item);
+    free(item);
   }
 
   array_destroy(classes);
@@ -79,6 +80,7 @@ void test_process_utility_classes_should_return_unique_css_classes_of_the_given_
       ".-p-\\[25px\\] {padding: -25px;} .float-left {float: left;}";
 
   TEST_ASSERT_EQUAL_STRING(expected_css, css);
+  free((void *)css);
 }
 
 int main(void) {
