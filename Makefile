@@ -1,14 +1,18 @@
-.PHONY: cwindcss.o
+.PHONY: cwindcss.o libcwindcss.so test
 
 CC=gcc
 
-PREFIX?=/usr/local
+ifndef PREFIX
+   PREFIX=/usr
+else
+   PREFIX=/usr/local
+endif
 LIB_DIR=$(PREFIX)/lib
 INCLUDE_DIR=$(PREFIX)/include
 CLI=cwindcss-cli
 CFLAGS+=-Wall -Wextra -Wmissing-declarations -Wshadow
 CFLAGS+=-Wstrict-prototypes -Wmissing-prototypes
-CFLAGS+=-Wpointer-arith -Wcast-qual -Wsign-compare
+CFLAGS+=-Wpointer-arith -Wsign-compare
 CFLAGS+=-std=c23 -O2 -fPIC -g
 CFLAGS+=-ldl -lm
 LDFLAGS+=-ldl -lm
@@ -16,20 +20,21 @@ LDFLAGS+=-ldl -lm
 all: libcwindcss.so $(CLI)
 
 objects:
-	$(CC) $(CFLAGS) -c ./lib/*.c $(LDFLAGS)
+	@$(CC) $(CFLAGS) -c ./lib/*.c $(LDFLAGS)
 
 cwindcss.o: objects
-	$(CC) $(CFLAGS) -fPIC -g -c ./lib/cwindcss.c -o cwindcss.o $(LDFLAGS)
+	@$(CC) $(CFLAGS) -fPIC -g -c ./lib/cwindcss.c -o cwindcss.o $(LDFLAGS)
 
 libcwindcss.so: cwindcss.o
-	ar rcs libcwindcss.a *.o
-	#$(CC) -shared -o libcwindcss.so *.o $(LDFLAGS)
+	@ar rcs libcwindcss.a *.o
+
+#$(CC) -shared -o libcwindcss.so *.o $(LDFLAGS)
 
 test: cwindcss.o libcwindcss.so
-	cd tests && make && make run
+	@cd tests && make && make run
 
 $(CLI): cwindcss.o
-	cd cli && make
+	@cd cli && make
 
 install: libcwindcss.so
 	mkdir -p $(LIB_DIR)
