@@ -8,7 +8,6 @@ void init_sizing_classes() {
   // free ballling
   array *matcher_css_pairs = array_new(0, PAIRS);
   array *tmp = NULL;
-  int stat = 0;
 
   tmp = get_class_and_fmt_variations("w", "width", "%s",
                                      NORMAL | NEGATIVE | IMPORTANT);

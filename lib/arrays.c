@@ -5,6 +5,10 @@
 #define NONE_ITEM                                                              \
   (array_item) { .none = NONE }
 
+int assert_type(array *a, array_type type);
+int assert_index_and_type(array *a, size_t idx, array_type type);
+int array_resize(array *a);
+
 array *array_new(size_t size, array_type type) {
   array *a = (array *)malloc(sizeof(array));
   a->type = type;
@@ -27,10 +31,10 @@ void array_destroy(array *a) {
       continue;
     }
     if (a->type == STRINGS && item.string != NULL) {
-      free((void *)item.string);
+      free(item.string);
     }
     if (a->type == PAIRS && item.pair != NULL) {
-      pair_destroy((pair *)item.pair);
+      pair_destroy(item.pair);
     }
   }
   free(a->items);
@@ -46,31 +50,11 @@ array_item array_at(array *a, size_t idx) {
   array_item item;
   item.none = NONE;
 
-  if (idx > a->len || idx < 0 ||
-      (a->type == STRINGS && a->items[idx].string == NULL)) {
+  if (idx > a->len || (a->type == STRINGS && a->items[idx].string == NULL)) {
     return item;
   }
 
   return a->items[idx];
-}
-
-int assert_type(array *a, array_type type) {
-  if (a->type != type) {
-    return ARRAYS_INVALID_TYPE;
-  }
-
-  return ARRAYS_OK;
-}
-
-int assert_index_and_type(array *a, size_t idx, array_type type) {
-  if (idx >= a->len || idx < 0) {
-    return ARRAYS_OUT_OF_BOUND;
-  }
-  if (assert_type(a, type) != ARRAYS_OK) {
-    return ARRAYS_INVALID_TYPE;
-  }
-
-  return ARRAYS_OK;
 }
 
 int array_set_int32_at(array *a, size_t idx, const int item) {
@@ -81,6 +65,88 @@ int array_set_int32_at(array *a, size_t idx, const int item) {
 
   const int *ptr = &item;
   a->items[idx] = (array_item){.int32 = ptr};
+  return ARRAYS_OK;
+}
+
+int array_set_double_at(array *a, size_t idx, double item) {
+  int stat = assert_index_and_type(a, idx, DOUBLES);
+  if (stat != ARRAYS_OK) {
+    return stat;
+  }
+
+  const double *ptr = &item;
+  a->items[idx] = (array_item){.float64 = ptr};
+  return ARRAYS_OK;
+}
+
+int array_set_string_at(array *a, size_t idx, const char *item) {
+  int stat = assert_index_and_type(a, idx, STRINGS);
+  if (stat != ARRAYS_OK) {
+    return stat;
+  }
+
+  a->items[idx] = (array_item){.string = (char *)item};
+  return ARRAYS_OK;
+}
+
+int array_push_string(array *a, const char *item) {
+  int stat = assert_type(a, STRINGS);
+  if (stat != ARRAYS_OK) {
+    return stat;
+  }
+
+  stat = array_resize(a);
+  if (stat != ARRAYS_OK) {
+    return stat;
+  }
+
+  a->items[a->len++] = (array_item){.string = (char *)item};
+  return ARRAYS_OK;
+}
+
+int array_set_pair_at(array *a, size_t idx, pair *item) {
+  int stat = assert_index_and_type(a, idx, PAIRS);
+  if (stat != ARRAYS_OK) {
+    return stat;
+  }
+
+  a->items[idx] = (array_item){.pair = item};
+  return ARRAYS_OK;
+}
+
+int array_push_pair(array *a, pair *item) {
+  int stat = assert_type(a, PAIRS);
+  if (stat != ARRAYS_OK) {
+    return stat;
+  }
+
+  stat = array_resize(a);
+  if (stat != ARRAYS_OK) {
+    return stat;
+  }
+
+  a->items[a->len++] = (array_item){.pair = item};
+  return ARRAYS_OK;
+}
+
+bool array_is_item_none(array_item item) { return item.none == NONE; }
+
+int assert_type(array *a, array_type type) {
+  if (a->type != type) {
+    return ARRAYS_INVALID_TYPE;
+  }
+
+  return ARRAYS_OK;
+}
+
+int assert_index_and_type(array *a, size_t idx, array_type type) {
+  if (idx >= a->len) {
+    return ARRAYS_OUT_OF_BOUND;
+  }
+  if (assert_type(a, type) != ARRAYS_OK) {
+    return ARRAYS_INVALID_TYPE;
+  }
+
   return ARRAYS_OK;
 }
 
@@ -121,75 +187,3 @@ int array_push_int32(array *a, int item) {
   a->items[a->len++] = (array_item){.int32 = ptr};
   return ARRAYS_OK;
 }
-
-int array_set_double_at(array *a, size_t idx, double item) {
-  int stat = assert_index_and_type(a, idx, DOUBLES);
-  if (stat != ARRAYS_OK) {
-    return stat;
-  }
-
-  const double *ptr = &item;
-  a->items[idx] = (array_item){.float64 = ptr};
-  return ARRAYS_OK;
-}
-
-int array_set_string_at(array *a, size_t idx, const char *item) {
-  int stat = assert_index_and_type(a, idx, STRINGS);
-  if (stat != ARRAYS_OK) {
-    return stat;
-  }
-
-  a->items[idx] = (array_item){.string = (char *)item};
-  return ARRAYS_OK;
-}
-
-int array_push_string(array *a, const char *item) {
-  int stat = assert_type(a, STRINGS);
-  if (stat != ARRAYS_OK) {
-    return stat;
-  }
-
-  stat = array_resize(a);
-  if (stat != ARRAYS_OK) {
-    return stat;
-  }
-
-  a->items[a->len++] = (array_item){.string = (char *)item};
-  return ARRAYS_OK;
-}
-
-int array_set_pair_at(array *a, size_t idx, const pair *item) {
-  int stat = assert_index_and_type(a, idx, PAIRS);
-  if (stat != ARRAYS_OK) {
-    return stat;
-  }
-
-  a->items[idx] = (array_item){.pair = item};
-  return ARRAYS_OK;
-}
-
-int array_push_pair(array *a, const pair *item) {
-  int stat = assert_type(a, PAIRS);
-  if (stat != ARRAYS_OK) {
-    return stat;
-  }
-
-  stat = array_resize(a);
-  if (stat != ARRAYS_OK) {
-    return stat;
-  }
-
-  a->items[a->len++] = (array_item){.pair = item};
-  return ARRAYS_OK;
-}
-
-int array_set_at(array *a, size_t idx, array_item item) {
-  if (idx >= a->len || idx < 0) {
-    return ARRAYS_OUT_OF_BOUND;
-  }
-
-  a->items[idx] = item;
-  return ARRAYS_OK;
-}
-
-bool array_is_item_none(array_item item) { return item.none == NONE; }

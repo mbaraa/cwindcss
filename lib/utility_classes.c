@@ -4,6 +4,8 @@
 #include <regex.h>
 #include <stdio.h>
 
+void destroy_classes_hash();
+
 regex_t *__utility_class_pattern = NULL;
 regex_t *__numerical_utility_class_value_pattern = NULL;
 regex_t *__numerical_utility_class_predefined_pattern = NULL;
@@ -112,16 +114,16 @@ void init_utility_classes() {
   __utility_class_pattern = compile_regex(
       "^-?!?([a-zA-Z0-9]+:)?[_a-zA-Z]+[_a-zA-Z0-9-]*(-(\\[.*\\]|\\w+))?$");
 
-  const char *responsive_modifiers = "xs:|sm:|md:|lg:|xl:|2xl:";
-  size_t responsive_modifiers_len = strlen(responsive_modifiers);
+  // const char *responsive_modifiers = "xs:|sm:|md:|lg:|xl:|2xl:";
+  // size_t responsive_modifiers_len = strlen(responsive_modifiers);
   const char *sizing_classes =
       "p|pt|pb|pl|pr|m|mt|mb|ml|mr|w|h|min-w|min-h|max-w|max-h|space-x|space-y|"
       "top|bottom|left|right|z|inset";
   size_t sizing_classes_len = strlen(sizing_classes);
-  const char *size_units =
-      "px|in|cm|mm|pt|pc|em|rem|%|ex|ch|vw|vh|dvh|dvw|vmin|vmax|deg|rad|grad|"
-      "turn|s|ms|dpi|dcpi|dppx|Hz|kHz";
-  size_t size_units_len = strlen(size_units);
+  //  const char *size_units =
+  //      "px|in|cm|mm|pt|pc|em|rem|%|ex|ch|vw|vh|dvh|dvw|vmin|vmax|deg|rad|grad|"
+  //      "turn|s|ms|dpi|dcpi|dppx|Hz|kHz";
+  //  size_t size_units_len = strlen(size_units);
 
   char numerical_utility_class_value_pattern_buffer[17 + sizing_classes_len];
   snprintf(numerical_utility_class_value_pattern_buffer,
@@ -142,18 +144,6 @@ void init_utility_classes() {
       compile_regex("^([\\-\\!a-z0-9-]+)$");
 }
 
-void destroy_classes_hash() {
-  struct class_fmt_hash_item *class, *tmp;
-
-  HASH_ITER(hh, __classes_values, class, tmp) {
-    HASH_DEL(__classes_values, class);
-    free(class->util_class);
-    free(class->fmt_str);
-    free(class);
-  }
-  free(tmp);
-}
-
 void destroy_utility_classes() {
   regfree(__utility_class_pattern);
   free(__utility_class_pattern);
@@ -164,4 +154,16 @@ void destroy_utility_classes() {
   regfree(__only_words_utility_class_value_pattern);
   free(__only_words_utility_class_value_pattern);
   destroy_classes_hash();
+}
+
+void destroy_classes_hash() {
+  struct class_fmt_hash_item *class, *tmp;
+
+  HASH_ITER(hh, __classes_values, class, tmp) {
+    HASH_DEL(__classes_values, class);
+    free(class->util_class);
+    free(class->fmt_str);
+    free(class);
+  }
+  free(tmp);
 }

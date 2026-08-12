@@ -7,16 +7,7 @@
 #define VARIATION_ITER(it)                                                     \
   for (variations_t it = NORMAL; it <= IMPORTANT; it <<= 1)
 
-int count_variations(variations_t variations) {
-  int count = 0;
-  VARIATION_ITER(v) {
-    if (variations & v) {
-      count++;
-    }
-  }
-
-  return count;
-}
+int count_variations(variations_t variations);
 
 array *get_class_and_fmt_variations(char *class_matcher, char *property_name,
                                     char *property_value,
@@ -66,4 +57,15 @@ array *get_class_and_fmt_variations(char *class_matcher, char *property_name,
   }
 
   return output;
+}
+
+int count_variations(variations_t variations) {
+  int count = 0;
+  VARIATION_ITER(v) {
+    if (variations & v) {
+      count++;
+    }
+  }
+
+  return count;
 }

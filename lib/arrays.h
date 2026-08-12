@@ -28,7 +28,7 @@ typedef union {
   const int *int32;
   const double *float64;
   char *string;
-  const pair *pair;
+  pair *pair;
 } array_item;
 
 typedef struct {
@@ -44,11 +44,12 @@ void array_destroy(array *a);
 void array_shallow_destroy(array *a);
 array_item array_at(array *a, size_t idx);
 int array_set_int32_at(array *a, size_t idx, const int item);
+int array_push_int32(array *a, int item);
 int array_set_double_at(array *a, size_t idx, double item);
 int array_set_string_at(array *a, size_t idx, const char *item);
 int array_push_string(array *a, const char *item);
-int array_set_pair_at(array *a, size_t idx, const pair *item);
-int array_push_pair(array *a, const pair *item);
+int array_set_pair_at(array *a, size_t idx, pair *item);
+int array_push_pair(array *a, pair *item);
 bool array_is_item_none(array_item item);
 
 #ifndef ARRAY_ITER

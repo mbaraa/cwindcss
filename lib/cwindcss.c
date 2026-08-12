@@ -21,6 +21,10 @@
 #include "spacing.h"
 #include "tables.h"
 
+int cwind_read_files_rec_impl(const char *path, const char *extension_filter,
+                              char **out_buffer, size_t *buf_len,
+                              size_t *buf_cap);
+
 void cwind_init() {
   init_utility_classes();
   init_boxes_classes();
@@ -181,6 +185,17 @@ char *cwind_process_utility_classes(char *input_html) {
   return output;
 }
 
+int cwind_read_files_rec(const char *path, const char *extension_filter,
+                         char **out_buffer) {
+  size_t buf_len = 0;
+  size_t buf_cap = 0;
+
+  *out_buffer = NULL;
+
+  return cwind_read_files_rec_impl(path, extension_filter, out_buffer, &buf_len,
+                                   &buf_cap);
+}
+
 int cwind_read_files_rec_impl(const char *path, const char *extension_filter,
                               char **out_buffer, size_t *buf_len,
                               size_t *buf_cap) {
@@ -257,17 +272,6 @@ int cwind_read_files_rec_impl(const char *path, const char *extension_filter,
 
   closedir(d);
   return CWIND_OK;
-}
-
-int cwind_read_files_rec(const char *path, const char *extension_filter,
-                         char **out_buffer) {
-  size_t buf_len = 0;
-  size_t buf_cap = 0;
-
-  *out_buffer = NULL;
-
-  return cwind_read_files_rec_impl(path, extension_filter, out_buffer, &buf_len,
-                                   &buf_cap);
 }
 
 int cwind_generate_output_css_file(const char *path,
